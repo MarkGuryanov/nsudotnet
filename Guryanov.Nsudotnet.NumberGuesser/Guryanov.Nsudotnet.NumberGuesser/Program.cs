@@ -17,72 +17,80 @@ namespace Guryanov.Nsudotnet.NumberGuesser
             "\r\n   /       ,\'-\'"
         };
 
-        private static int _minimumNumber;
-        public static int MinimumNumber
+        private int _minimumNumber;
+        public int MinimumNumber
         {
-            get
-            {
-                return _minimumNumber;
-            }
+            get { return _minimumNumber; }
             set
             {
                 if (value <= _maximumNumber) _minimumNumber = value;
             }
         }
 
-        private static int _maximumNumber;
-        public static int MaximumNumber
+        private int _maximumNumber;
+        public int MaximumNumber
         {
-            get
-            {
-                return _maximumNumber;
-            }
+            get { return _maximumNumber; }
             set
             {
                 if (value >= _minimumNumber) _maximumNumber = value;
             }
         }
 
-        public static uint HistorySize { get; set; }
-
-        public static uint TauntPeriod { get; set; }
-
-        
-        private readonly string _name;
-        private readonly int _guessedNumber;
-        private uint _numberOfGuesses;
-        private readonly Tuple<int, bool>[] _history;
-
-        private readonly Random _rng;
-        private readonly DateTime _startTime;
-
-        public Game(string name)
+        private uint _historySize;
+        public uint HistorySize
         {
+            get { return _historySize; }
+            set
+            {
+                if (value > 0)
+                {
+                    _historySize = value;
+                    _guessHistory = new int[_historySize];
+                }
+            }
+        }
+
+        private int _tauntPeriod;
+        public int TauntPeriod
+        {
+            get { return _tauntPeriod; }
+            set
+            {
+                if (value > 0) _tauntPeriod = value;
+            }
+        }
+        
+        private readonly string _userName;
+        private int[] _guessHistory;
+        private Random _rng;
+
+        public Game(string userName)
+        {
+            _userName = userName;
+            _rng = new Random();
+            
             MinimumNumber = 0;
             MaximumNumber = 100;
             HistorySize = 1000;
             TauntPeriod = 4;
-
-            _name = name;
-            _numberOfGuesses = 0;
-            _history = new Tuple<int,bool>[HistorySize];
-
-            _rng = new Random();
-            _guessedNumber = _rng.Next(MinimumNumber, MaximumNumber + 1);
-            _startTime = DateTime.Now;
-            Console.WriteLine("Загадано число от {0} до {1}. Попробуй его угадать.", 
-                MinimumNumber, MaximumNumber);
         }
 
         public void Run()
         {
-            while (_numberOfGuesses < HistorySize)
+            int guessedNumber = _rng.Next(MinimumNumber, MaximumNumber + 1);
+            DateTime startTime = DateTime.Now;
+            Console.WriteLine("Загадано число от {0} до {1}. Попробуй его угадать.",
+                MinimumNumber, MaximumNumber);
+
+            int numberOfGuesses = 0;
+            while (numberOfGuesses < HistorySize)
             {
                 string userInput = Console.ReadLine();
                 if (userInput == "q")
                 {
                     Console.WriteLine("Уже уходишь?");
-                    if (_numberOfGuesses >= TauntPeriod)
+                    if (numberOfGuesses >= TauntPeriod)
                     {
                         Console.WriteLine("Ну тогда я извиняюсь за сказанное ранее.");
                         Console.WriteLine("Ты же понимаешь, что не я так считаю, а мой программист.");
@@ -98,34 +106,34 @@ namespace Guryanov.Nsudotnet.NumberGuesser
                     Console.WriteLine("Их ещё в школе проходят.");
                     continue;
                 }
-                if (userGuess == _guessedNumber)
+                if (userGuess == guessedNumber)
                 {
                     // intended typo
-                    Console.WriteLine("Моё увожение, {0}! Ты сделал это!", _name);
+                    Console.WriteLine("Моё увожение, {0}! Ты сделал это!", _userName);
 
                     Console.WriteLine("А вот и твои \"успехи\":");
-                    for (int i = 0; i < _numberOfGuesses; i++)
+                    for (int i = 0; i < numberOfGuesses; i++)
                     {
-                        var entry = _history[i];
-                        Console.WriteLine("{0}\t{1}", entry.Item1, (entry.Item2 ? '<' : '>'));
+                        int guess = _guessHistory[i];
+                        Console.WriteLine("{0}\t{1}", guess,(guess < guessedNumber ? '<' : '>'));
                     }
-                    Console.WriteLine("{0}\t==", _guessedNumber);
-                    int floorMinutes = (int) (DateTime.Now - _startTime).TotalMinutes;
+                    Console.WriteLine("{0}\t==", guessedNumber);
+                    int floorMinutes = (int) (DateTime.Now - startTime).TotalMinutes;
                     Console.WriteLine("Потрачено минут: {0}", 
                         (floorMinutes == 0 ? "менее минуты" : floorMinutes.ToString()));
 
                     Console.WriteLine("А теперь иди и покажи это своей маме.");
                     return;
                 }
-                _history[_numberOfGuesses] = new Tuple<int, bool>(userGuess, _guessedNumber < userGuess);
-                ++_numberOfGuesses;
-                if (_numberOfGuesses % TauntPeriod == 0)
-                    Console.WriteLine(Taunts[_rng.Next(Taunts.Length)], _name);
+                _guessHistory[numberOfGuesses] = userGuess;
+                ++numberOfGuesses;
+                if (numberOfGuesses % TauntPeriod == 0)
+                    Console.WriteLine(Taunts[_rng.Next(Taunts.Length)], _userName);
                 Console.WriteLine("Загаданное мною число {0} введённого тобой. Попробуй ещё раз.", 
-                    (_guessedNumber < userGuess ? "меньше" : "больше"));
+                    (guessedNumber < userGuess ? "меньше" : "больше"));
             }
             Console.WriteLine("{0}. Ты настолько тупой, что даже не можешь угадать число от {1} до {2}!", 
-                _name, MinimumNumber, MaximumNumber);
+                _userName, MinimumNumber, MaximumNumber);
         }
     }
 
