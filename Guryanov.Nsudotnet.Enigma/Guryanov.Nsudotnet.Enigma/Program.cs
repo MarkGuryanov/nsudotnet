@@ -12,13 +12,13 @@ namespace Guryanov.Nsudotnet.Enigma
 
         public Enigma(string[] args)
         {
-            if (args.Length == 4 && args[0].ToLower() == "encrypt")
+            if (args.Length == 4 && args[0] == "encrypt")
             {
                 _toEncrypt = true;
                 _plainFileName = args[1];
                 _cryptoFileName = args[3];
             }
-            else if (args.Length == 5 && args[0].ToLower() == "decrypt")
+            else if (args.Length == 5 && args[0] == "decrypt")
             {
                 _toEncrypt = false;
                 _cryptoFileName = args[1];
@@ -27,7 +27,7 @@ namespace Guryanov.Nsudotnet.Enigma
             }
             else throw new ArgumentException("Wrong combination of arguments");
 
-            switch (args[2].ToLower())
+            switch (args[2])
             {
                 case "aes":
                     _algorithm = Aes.Create();
@@ -74,9 +74,8 @@ namespace Guryanov.Nsudotnet.Enigma
             string fileName = Path.GetFileNameWithoutExtension(_plainFileName);
             string fileExtension = Path.GetExtension(_plainFileName);
 
-            string keyFileName;
-            if (keyFilePath == null) keyFileName = fileName + ".key" + fileExtension;
-            else keyFileName = Path.Combine(keyFilePath, fileName + ".key" + fileExtension);
+            string keyFileName = string.Concat(fileName, ".key", fileExtension);
+            if (keyFilePath != null) keyFileName = Path.Combine(keyFilePath, keyFileName);
 
             File.WriteAllLines(keyFileName, new []
             {
